@@ -6,6 +6,8 @@ import tempfile
 import os
 from rich.console import Console
 from rich.panel import Panel
+from rich.table import Table
+from rich import box
 
 from restless.parser import parse_spec
 from restless.auth import detect_auth, AuthConfig
@@ -13,6 +15,23 @@ from restless.generator import generate_server
 
 app = typer.Typer(help="Generate MCP servers from OpenAPI specs")
 console = Console()
+
+BANNER = r"""
+[bold bright_cyan]
+   ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄ ▄▄    ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄
+   █       █       █       █      █  █  █       █       █
+   █    ▄  █▄     ▄█  ▄▄▄▄▄█  ▄   █   █▄█  ▄▄▄▄▄█  ▄▄▄▄▄█
+   █   █▄█ █ █   █ █ █▄▄▄▄▄█ █▄█  █       █ █▄▄▄▄▄█ █▄▄▄▄▄
+   █    ▄▄▄█ █   █ █▄▄▄▄▄  █      █  ▄    █▄▄▄▄▄  █▄▄▄▄▄
+   █   █   █ █   █ █▄▄▄▄▄█ █  ▄   █ █ █   █▄▄▄▄▄█  ▄▄▄▄▄█
+   █▄▄▄█   █ █▄▄▄█ █▄▄▄▄▄▄█▄█ █▄▄█▄█  █▄▄█▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█
+[/bold bright_cyan]
+[dim]   REST → MCP   [/dim] [bright_black]|[/bright_black] [dim] any OpenAPI spec → working MCP server [/dim]
+"""
+
+
+def _banner():
+    console.print(BANNER)
 
 
 def _load_raw_spec(spec: str) -> dict:
@@ -45,7 +64,7 @@ def generate(
     enhance: bool = typer.Option(False, "--enhance", help="Use LLM to improve tool descriptions (needs DEEPSEEK_API_KEY)"),
 ):
     """Generate an MCP server.py from an OpenAPI spec."""
-    console.print(f"[bold green]restless[/bold green] parsing [cyan]{spec}[/cyan]")
+    _banner()
 
     raw = _load_raw_spec(spec)
     base_url = ""
@@ -68,15 +87,21 @@ def generate(
 
     generate_server(endpoints, auth, base_url=base_url, output=output, api_title=api_title)
 
-    console.print(Panel(
-        f"[bold]Generated:[/bold] {output}\n"
-        f"[bold]Endpoints:[/bold] {len(endpoints)}\n"
-        f"[bold]Auth:[/bold] {auth.type}\n"
-        f"[bold]Base URL:[/bold] {base_url or '(set API_BASE_URL env var)'}\n\n"
-        f"[dim]Add to claude code:[/dim]\n"
-        f'[cyan]hermes config mcp add {api_title.lower().replace(" ", "-")} python {output}[/cyan]',
-        title="✅ Done",
-    ))
+    table = Table(box=box.ROUNDED, show_header=False, padding=(0, 2), border_style="bright_black")
+    table.add_column(style="bold bright_cyan", width=14)
+    table.add_column(style="white")
+    table.add_row("spec", spec)
+    table.add_row("output", f"[bold green]{output}[/bold green]")
+    table.add_row("endpoints", f"[bold]{len(endpoints)}[/bold] tools")
+    table.add_row("auth", auth.type)
+    table.add_row("base url", base_url or "[dim](set API_BASE_URL env var)[/dim]")
+    console.print(table)
+
+    short_name = api_title.lower().replace(" ", "-").replace("--", "-")
+    console.print()
+    console.print("  [dim]Add to [/dim][bold]Claude Code[/bold][dim]:[/dim]", justify="left")
+    console.print(f"  [bold cyan] claude mcp add {short_name} -- python {output}[/bold cyan]", justify="left")
+    console.print()
 
 
 @app.command()
@@ -87,6 +112,8 @@ def serve(
     enhance: bool = typer.Option(False, "--enhance"),
 ):
     """Generate + immediately run the MCP server (stdio transport)."""
+    _banner()
+
     with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as f:
         tmp_path = f.name
 
@@ -99,7 +126,8 @@ def serve(
     auth = detect_auth(raw, override_type=auth_type)
 
     generate_server(endpoints, auth, base_url=base_url, output=tmp_path, api_title=api_title)
-    console.print(f"[bold green]Serving[/bold green] {len(endpoints)} tools from {spec}")
+    console.print(f"[bold green]serving[/bold green] {len(endpoints)} tools from [cyan]{spec}[/cyan]")
+    console.print(f"[dim]press Ctrl+C to stop[/dim]\n")
 
     subprocess.run([sys.executable, tmp_path], check=True)
 
