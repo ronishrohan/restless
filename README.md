@@ -12,8 +12,8 @@ Turn any REST API with an OpenAPI spec into an MCP server your agent can use —
 # uv tool (recommended)
 uv tool install git+https://github.com/ronishrohan/restless
 
-# with LLM description enhancement
-uv tool install "restless[enhance] @ git+https://github.com/ronishrohan/restless"
+# then install the agent skill so agents can use restless themselves
+restless setup
 ```
 
 ## Usage
@@ -83,3 +83,4 @@ Works with Claude Desktop, Claude Code, Cursor, Continue, and any MCP-compatible
 | `--auth-type` | Force auth: `bearer`, `apikey-header`, `apikey-query`, `basic` |
 | `--output`, `-o` | Output path (default: `~/.mcp/servers/<name>.py`) |
 | `--enhance` | Use LLM to improve tool descriptions (needs `DEEPSEEK_API_KEY`) |
+| `setup` | Install the agent skill so agents can use restless themselves |
