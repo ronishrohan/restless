@@ -1,23 +1,29 @@
 # restless
 
-Generate MCP servers from OpenAPI specs. Any REST API with a spec becomes a set of Claude/Cursor tools in seconds.
+```json
+REST → MCP
+```
+
+Turn any REST API with an OpenAPI spec into an MCP server your agent can use — in one command.
 
 ## Install
 
 ```bash
-pip install restless
-# with LLM description enhancement:
-pip install "restless[enhance]"
+# uv tool (recommended)
+uv tool install git+https://github.com/ronishrohan/restless
+
+# with LLM description enhancement
+uv tool install "restless[enhance] @ git+https://github.com/ronishrohan/restless"
 ```
 
 ## Usage
 
 ```bash
-# generate server.py from local spec
-restless generate api.yaml
+# from a URL — fetches spec, generates server, prints the prompt
+restless generate https://petstore3.swagger.io/api/v3/openapi.json
 
-# from URL
-restless generate https://api.example.com/openapi.json
+# from a local file
+restless generate api.yaml
 
 # only expose specific endpoints
 restless generate api.yaml --include "POST /issues,GET /users/{id}"
@@ -25,42 +31,55 @@ restless generate api.yaml --include "POST /issues,GET /users/{id}"
 # with auth
 restless generate api.yaml --auth-type bearer
 
-# generate + run immediately
+# generate + run immediately (stdio transport)
 restless serve api.yaml
+
+# custom output path (default: ~/.mcp/servers/<name>.py)
+restless generate api.yaml -o /path/to/server.py
 ```
+
+Generated servers live in `~/.mcp/servers/` by default. Override with `-o`.
 
 ## Auth
 
-Set the relevant env var before running the generated server:
+Detected automatically from the spec. Override with `--auth-type`.
 
-| Auth type | Env var |
-|-----------|---------|
-| bearer | `API_BEARER_TOKEN` |
-| apikey-header | `API_KEY` |
-| apikey-query | `API_KEY` |
-| basic | `API_BASIC_TOKEN` |
-| base url | `API_BASE_URL` |
+| Auth type     | Env var            |
+|---------------|--------------------|
+| bearer        | `API_BEARER_TOKEN` |
+| apikey-header | `API_KEY`          |
+| apikey-query  | `API_KEY`          |
+| basic         | `API_BASIC_TOKEN`  |
+| base url      | `API_BASE_URL`     |
 
-## Add to your MCP client
+## Output
 
-After generating `server.py`, add it to your MCP client config:
+Every `restless generate` prints a prompt you can paste directly into any agent:
+
+```
+Plug this into your agent now, Enjoy!
+
+"Help me set up this MCP server:
 
 ```json
 {
   "mcpServers": {
-    "my-api": {
+    "petstore": {
       "command": "python",
-      "args": ["server.py"]
+      "args": ["/Users/you/.mcp/servers/petstore.py"]
     }
   }
 }
+```"
 ```
 
-Works with Claude Desktop, Cursor, Continue, and any MCP-compatible client.
+Works with Claude Desktop, Claude Code, Cursor, Continue, and any MCP-compatible client.
 
-## What's different from existing tools
+## Flags
 
-- **Selective exposure** — only expose the endpoints you need
-- **Auth that actually works** — bearer/apikey/basic auto-detected, pulled from env vars
-- **LLM-optimized descriptions** — `--enhance` flag rewrites descriptions for better agent usability
-- **Readable output** — generated `server.py` is clean, editable, not a black box
+| Flag | Description |
+|------|-------------|
+| `--include` | Comma-separated endpoints, e.g. `"POST /issues,GET /users/{id}"` |
+| `--auth-type` | Force auth: `bearer`, `apikey-header`, `apikey-query`, `basic` |
+| `--output`, `-o` | Output path (default: `~/.mcp/servers/<name>.py`) |
+| `--enhance` | Use LLM to improve tool descriptions (needs `DEEPSEEK_API_KEY`) |
