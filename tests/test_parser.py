@@ -1,4 +1,12 @@
-from restless.parser import parse_spec, EndpointSpec
+from restless.parser import parse_spec, EndpointSpec, _operation_to_name
+
+
+def test_operation_name_replaces_dots():
+    assert _operation_to_name("get", "/v2/{section}.json", None) == "get_v2_section_json"
+
+
+def test_operation_name_handles_double_dots():
+    assert _operation_to_name("get", "/dates/{start_date}..{end_date}", None) == "get_dates_start_date__end_date"
 
 
 def test_parse_returns_list_of_endpoints():

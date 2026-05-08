@@ -38,7 +38,8 @@ def _operation_to_name(method: str, path: str, operation_id: Optional[str]) -> s
         name = re.sub(r"(?<!^)(?=[A-Z])", "_", operation_id).lower()
         return re.sub(r"[^a-z0-9_]", "_", name)
     path_part = re.sub(r"[{}]", "", path).replace("/", "_").strip("_")
-    return f"{method}_{path_part}".lower()
+    name = f"{method}_{path_part}".lower()
+    return re.sub(r"[^a-z0-9_]", "_", name)
 
 
 def _parse_request_body(body_spec: dict) -> Optional[dict]:
