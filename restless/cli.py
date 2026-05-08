@@ -4,6 +4,7 @@ import subprocess
 import sys
 import tempfile
 import os
+import re
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -62,13 +63,15 @@ def generate(
     """Generate an MCP server.py from an OpenAPI spec."""
     _banner()
 
-    raw = _load_raw_spec(spec)
+    with console.status(f"[bold orange1]loading {spec}...[/bold orange1]", spinner="dots"):
+        raw = _load_raw_spec(spec)
     base_url = ""
     servers = raw.get("servers", [])
     if servers:
         base_url = servers[0].get("url", "")
     api_title = raw.get("info", {}).get("title", "API")
     short_name = api_title.lower().replace(" ", "-").replace("--", "-")
+    short_name = re.sub(r"-+", "-", short_name).strip("-")
 
     if output is None:
         mcp_dir = os.path.expanduser("~/.mcp/servers")
@@ -76,18 +79,22 @@ def generate(
         output = os.path.join(mcp_dir, f"{short_name}.py")
 
     include_list = _parse_include(include)
-    endpoints = parse_spec(spec, include=include_list)
-    auth = detect_auth(raw, override_type=auth_type)
+
+    with console.status("[bold orange1]parsing spec...[/bold orange1]", spinner="dots"):
+        endpoints = parse_spec(spec, include=include_list)
+        auth = detect_auth(raw, override_type=auth_type)
 
     if enhance:
-        try:
-            from restless.enhancer import enhance_descriptions
-            endpoints = enhance_descriptions(endpoints)
-            console.print("[dim]LLM description enhancement applied[/dim]")
-        except ImportError:
-            console.print("[yellow]Install with pip install restless[enhance] for LLM enhancement[/yellow]")
+        with console.status("[bold orange1]enhancing descriptions...[/bold orange1]", spinner="dots"):
+            try:
+                from restless.enhancer import enhance_descriptions
+                endpoints = enhance_descriptions(endpoints)
+                console.print("[dim]LLM description enhancement applied[/dim]")
+            except ImportError:
+                console.print("[yellow]Install with pip install restless[enhance] for LLM enhancement[/yellow]")
 
-    generate_server(endpoints, auth, base_url=base_url, output=output, api_title=api_title)
+    with console.status(f"[bold orange1]generating {output}...[/bold orange1]", spinner="dots"):
+        generate_server(endpoints, auth, base_url=base_url, output=output, api_title=api_title)
 
     table = Table(box=box.ROUNDED, show_header=False, padding=(0, 2), border_style="bright_black")
     table.add_column(style="bold bright_cyan", width=14)
@@ -101,14 +108,22 @@ def generate(
 
     console.print()
     console.print("  [bold orange1]Plug this into your agent now, Enjoy![/bold orange1]")
-    console.print("  [bright_black]{[/bright_black]")
-    console.print(f'  [bright_black]  "mcpServers": {{[/bright_black]')
-    console.print(f'  [bright_black]    "{short_name}": {{[/bright_black]')
-    console.print(f'  [bright_black]      "command": "python",[/bright_black]')
-    console.print(f'  [bright_black]      "args": ["{output}"][/bright_black]')
-    console.print("  [bright_black]    }[/bright_black]")
-    console.print("  [bright_black]  }[/bright_black]")
-    console.print("  [bright_black]}[/bright_black]")
+    console.print()
+    prompt = f'"Help me set up this MCP server:\n\n'
+    prompt += f'<details>\n'
+    prompt += f'<summary>MCP config for {short_name}</summary>\n\n'
+    prompt += f'```json\n'
+    prompt += f'{{\n'
+    prompt += f'  "mcpServers": {{\n'
+    prompt += f'    "{short_name}": {{\n'
+    prompt += f'      "command": "python",\n'
+    prompt += f'      "args": ["{output}"]\n'
+    prompt += f'    }}\n'
+    prompt += f'  }}\n'
+    prompt += f'}}\n'
+    prompt += f'```\n\n'
+    prompt += f'</details>"'
+    console.print(f"  [bright_black]{prompt}[/bright_black]")
     console.print()
 
 
