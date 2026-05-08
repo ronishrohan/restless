@@ -109,21 +109,19 @@ def generate(
     console.print()
     console.print("  [bold orange1]Plug this into your agent now, Enjoy![/bold orange1]")
     console.print()
-    prompt = f'"Help me set up this MCP server:\n\n'
-    prompt += f'<details>\n'
-    prompt += f'<summary>MCP config for {short_name}</summary>\n\n'
-    prompt += f'```json\n'
-    prompt += f'{{\n'
-    prompt += f'  "mcpServers": {{\n'
-    prompt += f'    "{short_name}": {{\n'
-    prompt += f'      "command": "python",\n'
-    prompt += f'      "args": ["{output}"]\n'
-    prompt += f'    }}\n'
-    prompt += f'  }}\n'
-    prompt += f'}}\n'
-    prompt += f'```\n\n'
-    prompt += f'</details>"'
-    console.print(f"  [bright_black]{prompt}[/bright_black]")
+    config_json = (
+        '{\n'
+        f'  "mcpServers": {{\n'
+        f'    "{short_name}": {{\n'
+        f'      "command": "python",\n'
+        f'      "args": ["{output}"]\n'
+        f'    }}\n'
+        f'  }}\n'
+        '}'
+    )
+    prompt = "Help me set up this MCP server:\n\n"
+    prompt += f"```json\n{config_json}\n```"
+    console.print(f'  "{prompt}"')
     console.print()
 
 
