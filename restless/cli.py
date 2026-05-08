@@ -96,7 +96,7 @@ def generate(
     with console.status(f"[bold orange1]generating {output}...[/bold orange1]", spinner="dots"):
         generate_server(endpoints, auth, base_url=base_url, output=output, api_title=api_title)
 
-    table = Table(box=box.ROUNDED, show_header=False, padding=(0, 2), border_style="bright_black")
+    table = Table(box=None, show_header=False, padding=(0, 0), border_style="bright_black")
     table.add_column(style="bold bright_cyan", width=14)
     table.add_column(style="white")
     table.add_row("spec", spec)
@@ -107,7 +107,7 @@ def generate(
     console.print(table)
 
     console.print()
-    console.print("  [bold orange1]Plug this into your agent now, Enjoy![/bold orange1]")
+    console.print("[bold orange1]Plug this into your agent now, Enjoy![/bold orange1]")
     console.print()
     config_json = (
         '{\n'
@@ -121,7 +121,7 @@ def generate(
     )
     prompt = "Help me set up this MCP server:\n\n"
     prompt += f"```json\n{config_json}\n```"
-    console.print(f'  "{prompt}"')
+    console.print(f'"{prompt}"')
     console.print()
 
 
