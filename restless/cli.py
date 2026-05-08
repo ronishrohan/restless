@@ -23,7 +23,7 @@ BANNER = r"""
 ▛▘█▌▛▘▜▘▐ █▌▛▘▛▘
 ▌ ▙▖▄▌▐▖▐▖▙▖▄▌▄▌
 [/bold orange1]
-[dim]     REST → MCP   [/dim] [bright_black]|[/bright_black] [dim] any OpenAPI spec → working MCP server [/dim]
+[dim]REST → MCP   [/dim] [bright_black]|[/bright_black] [dim] any OpenAPI spec → working MCP server [/dim]
 """
 
 
