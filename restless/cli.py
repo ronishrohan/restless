@@ -17,12 +17,10 @@ app = typer.Typer(help="Generate MCP servers from OpenAPI specs")
 console = Console()
 
 BANNER = r"""
-[bold orange1]               _   _
-              | | | |
- _ __ ___  ___| |_| | ___  ___ ___
-| '__/ _ \/ __| __| |/ _ \/ __/ __|
-| | |  __/\__ \ |_| |  __/\__ \__ \\
-|_|  \___||___/\__|_|\___||___/___/
+[bold orange1]
+▗ ▜
+▛▘█▌▛▘▜▘▐ █▌▛▘▛▘
+▌ ▙▖▄▌▐▖▐▖▙▖▄▌▄▌
 [/bold orange1]
 [dim]     REST → MCP   [/dim] [bright_black]|[/bright_black] [dim] any OpenAPI spec → working MCP server [/dim]
 """
@@ -97,8 +95,15 @@ def generate(
 
     short_name = api_title.lower().replace(" ", "-").replace("--", "-")
     console.print()
-    console.print("  [dim]Add to [/dim][bold]Claude Code[/bold][dim]:[/dim]", justify="left")
-    console.print(f"  [bold cyan] claude mcp add {short_name} -- python {output}[/bold cyan]", justify="left")
+    console.print("  [dim]Add to your MCP client[/dim] [bright_black](Claude Desktop, Cursor, Continue, etc.)[/bright_black][dim]:[/dim]", justify="left")
+    console.print("  [bright_black]{[/bright_black]")
+    console.print(f'  [bright_black]  "mcpServers": {{[/bright_black]')
+    console.print(f'  [bright_black]    "{short_name}": {{[/bright_black]')
+    console.print(f'  [bright_black]      "command": "python",[/bright_black]')
+    console.print(f'  [bright_black]      "args": ["{output}"][/bright_black]')
+    console.print("  [bright_black]    }[/bright_black]")
+    console.print("  [bright_black]  }[/bright_black]")
+    console.print("  [bright_black]}[/bright_black]")
     console.print()
 
 
