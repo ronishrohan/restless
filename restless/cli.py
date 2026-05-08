@@ -5,6 +5,8 @@ import sys
 import tempfile
 import os
 import re
+import shutil
+from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -151,6 +153,24 @@ def serve(
     console.print(f"[dim]press Ctrl+C to stop[/dim]\n")
 
     subprocess.run([sys.executable, tmp_path], check=True)
+
+
+@app.command()
+def setup():
+    """Install the restless agent skill so agents can use restless themselves."""
+    import restless
+
+    src = Path(restless.__file__).parent / "skills" / "restless" / "SKILL.md"
+    dst_dir = Path.home() / ".agents" / "skills" / "restless"
+    dst_dir.mkdir(parents=True, exist_ok=True)
+    dst = dst_dir / "SKILL.md"
+
+    if src.exists():
+        shutil.copy2(src, dst)
+        console.print(f"[bold green]✓[/bold green] skill installed → [cyan]{dst}[/cyan]")
+    else:
+        console.print(f"[red]skill file not found in package[/red]")
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":
