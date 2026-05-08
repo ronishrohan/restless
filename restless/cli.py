@@ -54,7 +54,7 @@ def _parse_include(include: str | None) -> list[str] | None:
 @app.command()
 def generate(
     spec: str = typer.Argument(..., help="Path or URL to OpenAPI spec (yaml/json)"),
-    output: str = typer.Option("server.py", "--output", "-o"),
+    output: str = typer.Option(None, "--output", "-o", help="Output file path (default: ~/.mcp/servers/<name>.py)"),
     include: str = typer.Option(None, "--include", help='e.g. "POST /issues,GET /users/{id}"'),
     auth_type: str = typer.Option(None, "--auth-type", help="bearer | apikey-header | apikey-query | basic"),
     enhance: bool = typer.Option(False, "--enhance", help="Use LLM to improve tool descriptions (needs DEEPSEEK_API_KEY)"),
@@ -68,6 +68,12 @@ def generate(
     if servers:
         base_url = servers[0].get("url", "")
     api_title = raw.get("info", {}).get("title", "API")
+    short_name = api_title.lower().replace(" ", "-").replace("--", "-")
+
+    if output is None:
+        mcp_dir = os.path.expanduser("~/.mcp/servers")
+        os.makedirs(mcp_dir, exist_ok=True)
+        output = os.path.join(mcp_dir, f"{short_name}.py")
 
     include_list = _parse_include(include)
     endpoints = parse_spec(spec, include=include_list)
@@ -93,9 +99,8 @@ def generate(
     table.add_row("base url", base_url or "[dim](set API_BASE_URL env var)[/dim]")
     console.print(table)
 
-    short_name = api_title.lower().replace(" ", "-").replace("--", "-")
     console.print()
-    console.print("  [dim]Add to your MCP client[/dim] [bright_black](Claude Desktop, Cursor, Continue, etc.)[/bright_black][dim]:[/dim]", justify="left")
+    console.print("  [bold orange1]Plug this into your agent now, Enjoy![/bold orange1]")
     console.print("  [bright_black]{[/bright_black]")
     console.print(f'  [bright_black]  "mcpServers": {{[/bright_black]')
     console.print(f'  [bright_black]    "{short_name}": {{[/bright_black]')
