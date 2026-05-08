@@ -41,13 +41,22 @@ Set the relevant env var before running the generated server:
 | basic | `API_BASIC_TOKEN` |
 | base url | `API_BASE_URL` |
 
-## Add to Claude Code
+## Add to your MCP client
 
-After generating `server.py`:
+After generating `server.py`, add it to your MCP client config:
 
-```bash
-hermes config mcp add my-api python server.py
+```json
+{
+  "mcpServers": {
+    "my-api": {
+      "command": "python",
+      "args": ["server.py"]
+    }
+  }
+}
 ```
+
+Works with Claude Desktop, Cursor, Continue, and any MCP-compatible client.
 
 ## What's different from existing tools
 
