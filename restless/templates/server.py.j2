@@ -34,14 +34,21 @@ mcp = FastMCP("{{ api_title }}")
 {% for ep in endpoints %}
 @mcp.tool()
 def {{ ep.name }}(
-    {%- for param in ep.parameters if param.get("in") in ("path", "query") %}
-    {{ param.name }}: {{ "str" if param.schema.get("type") == "string" else "int" if param.schema.get("type") == "integer" else "str" }}{% if not param.get("required", False) %} = None{% endif %},
+    {%- set func_params = ep.parameters | selectattr("in", "in", ["path", "query"]) | list %}
+    {%- for param in func_params if param.get("required", False) %}
+    {{ param.name }}: {{ "str" if param.schema.get("type") == "string" else "int" if param.schema.get("type") == "integer" else "str" }},
     {%- endfor %}
     {%- if ep.request_body %}
-    {%- for field_name, field_schema in ep.request_body.properties.items() %}
-    {{ field_name }}: {{ "str" if field_schema.get("type") == "string" else "int" if field_schema.get("type") == "integer" else "bool" if field_schema.get("type") == "boolean" else "str" }}{% if field_name not in ep.request_body.required_fields %} = None{% endif %},
+    {%- for field_name, field_schema in ep.request_body.properties.items() if field_name in ep.request_body.required_fields %}
+    {{ field_name }}: {{ "str" if field_schema.get("type") == "string" else "int" if field_schema.get("type") == "integer" else "bool" if field_schema.get("type") == "boolean" else "str" }},
+    {%- endfor %}
+    {%- for field_name, field_schema in ep.request_body.properties.items() if field_name not in ep.request_body.required_fields %}
+    {{ field_name }}: {{ "str" if field_schema.get("type") == "string" else "int" if field_schema.get("type") == "integer" else "bool" if field_schema.get("type") == "boolean" else "str" }} = None,
     {%- endfor %}
     {%- endif %}
+    {%- for param in func_params if not param.get("required", False) %}
+    {{ param.name }}: {{ "str" if param.schema.get("type") == "string" else "int" if param.schema.get("type") == "integer" else "str" }} = None,
+    {%- endfor %}
 ) -> dict:
     """{{ ep.description }}"""
     path = "{{ ep.path }}"
@@ -81,4 +88,4 @@ def {{ ep.name }}(
 {% endfor %}
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(show_banner=False)
