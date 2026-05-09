@@ -10,6 +10,17 @@ class AuthConfig:
     query_param: str = ""
 
 
+def _resolve_ref(raw: dict, ref: str) -> dict:
+    """Resolve a $ref pointer like '#/components/securitySchemes/bearerAuth'."""
+    if not ref.startswith("#/"):
+        return {}
+    parts = ref[2:].split("/")
+    current = raw
+    for part in parts:
+        current = current.get(part, {})
+    return current if isinstance(current, dict) else {}
+
+
 def detect_auth(spec: dict, override_type: Optional[str] = None) -> AuthConfig:
     """
     Detect auth scheme from OpenAPI spec securitySchemes.
@@ -23,6 +34,11 @@ def detect_auth(spec: dict, override_type: Optional[str] = None) -> AuthConfig:
         return AuthConfig(type="none")
 
     for name, scheme in schemes.items():
+        if isinstance(scheme, dict) and "$ref" in scheme:
+            scheme = _resolve_ref(spec, scheme["$ref"])
+            if not scheme:
+                continue
+
         scheme_type = scheme.get("type", "")
 
         if scheme_type == "http":

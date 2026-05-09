@@ -12,7 +12,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich import box
 
-from restless.parser import parse_spec
+from restless.parser import parse_spec, _extract_base_url
 from restless.auth import detect_auth, AuthConfig
 from restless.generator import generate_server
 
@@ -36,7 +36,7 @@ def _banner():
 def _load_raw_spec(spec: str) -> dict:
     import httpx, json
     if spec.startswith("http"):
-        r = httpx.get(spec)
+        r = httpx.get(spec, follow_redirects=True)
         r.raise_for_status()
         text = r.text
     else:
@@ -67,10 +67,7 @@ def generate(
 
     with console.status(f"[bold orange1]loading {spec}...[/bold orange1]", spinner="dots"):
         raw = _load_raw_spec(spec)
-    base_url = ""
-    servers = raw.get("servers", [])
-    if servers:
-        base_url = servers[0].get("url", "")
+    base_url = _extract_base_url(raw)
     api_title = raw.get("info", {}).get("title", "API")
     short_name = api_title.lower().replace(" ", "-").replace("--", "-")
     short_name = re.sub(r"-+", "-", short_name).strip("-")
@@ -85,6 +82,10 @@ def generate(
     with console.status("[bold orange1]parsing spec...[/bold orange1]", spinner="dots"):
         endpoints = parse_spec(spec, include=include_list)
         auth = detect_auth(raw, override_type=auth_type)
+
+    if not endpoints:
+        console.print("[yellow]⚠  no endpoints found — check your spec or --include filter[/yellow]")
+        raise typer.Exit(1)
 
     if enhance:
         with console.status("[bold orange1]enhancing descriptions...[/bold orange1]", spinner="dots"):
@@ -141,12 +142,16 @@ def serve(
         tmp_path = f.name
 
     raw = _load_raw_spec(spec)
-    base_url = raw.get("servers", [{}])[0].get("url", "")
+    base_url = _extract_base_url(raw)
     api_title = raw.get("info", {}).get("title", "API")
 
     include_list = _parse_include(include)
     endpoints = parse_spec(spec, include=include_list)
     auth = detect_auth(raw, override_type=auth_type)
+
+    if not endpoints:
+        console.print("[yellow]⚠  no endpoints found[/yellow]")
+        raise typer.Exit(1)
 
     generate_server(endpoints, auth, base_url=base_url, output=tmp_path, api_title=api_title)
     console.print(f"[bold green]serving[/bold green] {len(endpoints)} tools from [cyan]{spec}[/cyan]")

@@ -36,18 +36,18 @@ mcp = FastMCP("{{ api_title }}")
 def {{ ep.name }}(
     {%- set func_params = ep.parameters | selectattr("in", "in", ["path", "query"]) | list %}
     {%- for param in func_params if param.get("required", False) %}
-    {{ param.name }}: {{ "str" if param.schema.get("type") == "string" else "int" if param.schema.get("type") == "integer" else "str" }},
+    {{ param.name }}: {{ param._type }},
     {%- endfor %}
     {%- if ep.request_body %}
     {%- for field_name, field_schema in ep.request_body.properties.items() if field_name in ep.request_body.required_fields %}
-    {{ field_name }}: {{ "str" if field_schema.get("type") == "string" else "int" if field_schema.get("type") == "integer" else "bool" if field_schema.get("type") == "boolean" else "str" }},
+    {{ field_name }}: {{ field_schema._type }},
     {%- endfor %}
     {%- for field_name, field_schema in ep.request_body.properties.items() if field_name not in ep.request_body.required_fields %}
-    {{ field_name }}: {{ "str" if field_schema.get("type") == "string" else "int" if field_schema.get("type") == "integer" else "bool" if field_schema.get("type") == "boolean" else "str" }} = None,
+    {{ field_name }}: {{ field_schema._type }} = None,
     {%- endfor %}
     {%- endif %}
     {%- for param in func_params if not param.get("required", False) %}
-    {{ param.name }}: {{ "str" if param.schema.get("type") == "string" else "int" if param.schema.get("type") == "integer" else "str" }} = None,
+    {{ param.name }}: {{ param._type }} = None,
     {%- endfor %}
 ) -> dict:
     """{{ ep.description }}"""
