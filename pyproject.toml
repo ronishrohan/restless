@@ -16,8 +16,6 @@ dependencies = [
     "rich>=13.0",
 ]
 
-[project.optional-dependencies]
-enhance = ["openai>=1.0"]
 
 [project.scripts]
 restless = "restless.cli:app"

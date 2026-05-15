@@ -60,7 +60,7 @@ def generate(
     output: str = typer.Option(None, "--output", "-o", help="Output file path (default: ~/.mcp/servers/<name>.py)"),
     include: str = typer.Option(None, "--include", help='e.g. "POST /issues,GET /users/{id}"'),
     auth_type: str = typer.Option(None, "--auth-type", help="bearer | apikey-header | apikey-query | basic"),
-    enhance: bool = typer.Option(False, "--enhance", help="Use LLM to improve tool descriptions (needs DEEPSEEK_API_KEY)"),
+    enhance: bool = typer.Option(False, "--enhance", help="Use LLM to improve tool descriptions (needs DEEPSEEK_API_KEY)", hidden=True),
 ):
     """Generate an MCP server.py from an OpenAPI spec."""
     _banner()
@@ -86,15 +86,6 @@ def generate(
     if not endpoints:
         console.print("[yellow]⚠  no endpoints found — check your spec or --include filter[/yellow]")
         raise typer.Exit(1)
-
-    if enhance:
-        with console.status("[bold orange1]enhancing descriptions...[/bold orange1]", spinner="dots"):
-            try:
-                from restless.enhancer import enhance_descriptions
-                endpoints = enhance_descriptions(endpoints)
-                console.print("[dim]LLM description enhancement applied[/dim]")
-            except ImportError:
-                console.print("[yellow]Install with pip install restless[enhance] for LLM enhancement[/yellow]")
 
     with console.status(f"[bold orange1]generating {output}...[/bold orange1]", spinner="dots"):
         generate_server(endpoints, auth, base_url=base_url, output=output, api_title=api_title)
@@ -133,7 +124,6 @@ def serve(
     spec: str = typer.Argument(..., help="Path or URL to OpenAPI spec"),
     include: str = typer.Option(None, "--include"),
     auth_type: str = typer.Option(None, "--auth-type"),
-    enhance: bool = typer.Option(False, "--enhance"),
 ):
     """Generate + immediately run the MCP server (stdio transport)."""
     _banner()
