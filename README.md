@@ -1,4 +1,4 @@
-# restless
+# rest0less
 
 ```json
 REST → MCP
@@ -84,5 +84,4 @@ Works with Claude Desktop, Claude Code, Cursor, Continue, and any MCP-compatible
 | `--include` | Comma-separated endpoints, e.g. `"POST /issues,GET /users/{id}"` |
 | `--auth-type` | Force auth: `bearer`, `apikey-header`, `apikey-query`, `basic` |
 | `--output`, `-o` | Output path (default: `~/.mcp/servers/<name>.py`) |
-| `--enhance` | Use LLM to improve tool descriptions (needs `DEEPSEEK_API_KEY`) |
 | `setup` | Install the agent skill so agents can use restless themselves |
