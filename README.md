@@ -9,8 +9,10 @@ Turn any REST API with an OpenAPI spec into an MCP server your agent can use —
 ## Install
 
 ```bash
-# uv tool (recommended)
-uv tool install git+https://github.com/ronishrohan/restless
+pip install rest0less
+
+# or via uv
+uv tool install rest0less
 
 # then install the agent skill so agents can use restless themselves
 restless setup

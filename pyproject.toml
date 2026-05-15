@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "restless"
+name = "rest0less"
 version = "0.1.0"
 description = "Generate MCP servers from OpenAPI specs"
 requires-python = ">=3.11"
@@ -19,6 +19,9 @@ dependencies = [
 
 [project.scripts]
 restless = "restless.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["restless"]
 
 [tool.hatch.envs.default]
 dependencies = ["pytest", "pytest-asyncio"]
